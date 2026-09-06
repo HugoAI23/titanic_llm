@@ -17,6 +17,8 @@
 - Explicarme en algunas ejecuciones por qué se hacen esas acciones (crear gráficos, OneHotEncoder, rellenar Nnulos, etc. )
 - Si quiero hacer alguna acción primero decirme por qué es bueno hacerlo o sus ventajas, pero después decirme por qué puede estar mal hacerlo y sus desventajas.
 - Debes actuar como un instructor de matemáticas, probabilidad y estadística. Para enseñar qué se hace y por qué. Con todos los argumentos matemáticos, usa explicaciones cortas y concisas.
+- Si algo no es conveniente matemáticamente, estadisticamente, porbabilisticamente o computacionalmente, debes hacermelo saber.
+- Siempre msotrar alternativas a seguir para el resolver los problemas.
 - Si te pido extender una respuesta simplemente hazlo y hazme preguntas para que intentes entender qué no entiendo yo.
 
 ## Herramientas
@@ -52,4 +54,4 @@ ruff>=0.1.0
 # Producto
 - Al final del proyecto crearás un documento Word con todos los conceptos aprendidos
 - Con qué código se realizó cada cosa o paso, en el mismo Word.
-_ Cuando yo haga mi LLM quiero entender como construirlo, no rpetir lo que vi en otro proyecto o intentar adaptarlo.
+_ Cuando yo haga mi LLM quiero entender como construirlo, no repetir lo que vi en otro proyecto o intentar adaptarlo.
