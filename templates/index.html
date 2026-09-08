@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Titanic ML • Simulador, Dashboard & Asistente IA</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Anime.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-[#0b0f19] text-slate-100 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- TOP NAVIGATION / HEADER -->
+  <header class="sticky top-0 z-50 border-b border-slate-800/80 bg-[#0b0f19]/80 backdrop-blur-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
+          <i data-lucide="anchor" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-lg tracking-tight text-white">TITANIC <span class="text-brand-400">ML</span></span>
+            <span class="px-2 py-0.5 text-[10px] font-semibold bg-brand-500/10 text-brand-400 border border-brand-500/20 rounded-full">v2.0 PROD</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">Pipeline de Inferencia, Dashboard & Asistente</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center space-x-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-sm">
+        <button id="tab-btn-sim" onclick="switchTab('sim')" class="px-3.5 py-1.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 bg-brand-600 text-white shadow-sm">
+          <i data-lucide="compass" class="w-4 h-4"></i>
+          <span>Simulador</span>
+        </button>
+        <button id="tab-btn-dash" onclick="switchTab('dash')" class="px-3.5 py-1.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-slate-400 hover:text-white hover:bg-slate-800">
+          <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+          <span>Dashboard</span>
+        </button>
+        <button id="tab-btn-chat" onclick="switchTab('chat')" class="px-3.5 py-1.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-slate-400 hover:text-white hover:bg-slate-800">
+          <i data-lucide="message-square" class="w-4 h-4"></i>
+          <span>Asistente</span>
+        </button>
+      </nav>
+
+      <!-- Model Selector Badge -->
+      <div class="hidden md:flex items-center space-x-2">
+        <div class="flex items-center text-xs bg-slate-900 border border-slate-800 rounded-lg p-1">
+          <span class="text-slate-400 px-2 flex items-center"><i data-lucide="cpu" class="w-3.5 h-3.5 mr-1 text-cyan-400"></i> Modelo:</span>
+          <select id="header-model-select" onchange="syncModelSelection(this.value)" class="bg-slate-800 text-white rounded px-2 py-1 text-xs outline-none border border-slate-700 cursor-pointer">
+            <option value="rf">Random Forest (82.1% Acc)</option>
+            <option value="lr">Regresión Logística (80.4% Acc)</option>
+            <option value="both">Comparar Ambos Modelos</option>
+          </select>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+
+    <!-- ============================================================== -->
+    <!-- TAB 1: SIMULADOR PREDICTIVO (PIPELINE DE PRODUCCIÓN) -->
+    <!-- ============================================================== -->
+    <section id="tab-sim" class="space-y-6">
+      
+      <!-- Presets Banner -->
+      <div class="bklit-card rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <div class="flex items-center space-x-2">
+          <div class="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold text-white">Casos de Uso Predefinidos</h3>
+            <p class="text-xs text-slate-400">Carga perfiles arquetípicos para comprobar la inferencia del modelo:</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="loadPreset('rose')" class="px-3 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition flex items-center space-x-1.5">
+            <span>🌹 Rose DeWitt (1ª C, F)</span>
+          </button>
+          <button onclick="loadPreset('jack')" class="px-3 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition flex items-center space-x-1.5">
+            <span>🎨 Jack Dawson (3ª C, M)</span>
+          </button>
+          <button onclick="loadPreset('child_2nd')" class="px-3 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition flex items-center space-x-1.5">
+            <span>👶 Niño en 2ª Clase</span>
+          </button>
+          <button onclick="loadPreset('gentleman')" class="px-3 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition flex items-center space-x-1.5">
+            <span>🎩 Caballero 1ª Clase</span>
+          </button>
+          <button onclick="loadPreset('family_3rd')" class="px-3 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition flex items-center space-x-1.5">
+            <span>👨‍👩‍👧‍👦 Familia en 3ª Clase</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid Layout: Form Controls (Left) vs Live Inference (Right) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Input Form -->
+        <div class="lg:col-span-7 space-y-5">
+          <div class="bklit-card rounded-2xl p-6 space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-brand-500/10 border border-brand-500/20 text-brand-400 flex items-center justify-center">
+                  <i data-lucide="sliders" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <h2 class="text-base font-bold text-white">Parámetros del Pasajero</h2>
+                  <p class="text-xs text-slate-400">Ajusta las mediciones para simular la supervivencia en tiempo real</p>
+                </div>
+              </div>
+
+              <!-- Realtime checkbox -->
+              <label class="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer select-none">
+                <input type="checkbox" id="realtime-toggle" checked class="rounded bg-slate-800 border-slate-700 text-brand-500 focus:ring-0 w-4 h-4">
+                <span>Tiempo real</span>
+              </label>
+            </div>
+
+            <!-- 1. Género & Clase -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Sexo -->
+              <div class="space-y-2">
+                <label class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                  <span>Género</span>
+                  <span class="text-[11px] text-slate-400 font-normal">Factor crítico</span>
+                </label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button type="button" id="btn-sex-female" onclick="setSex('female')" class="py-2.5 px-3 rounded-xl border border-pink-500/40 bg-pink-500/10 text-pink-300 font-medium text-xs flex items-center justify-center space-x-2 transition">
+                    <i data-lucide="user" class="w-3.5 h-3.5 text-pink-400"></i>
+                    <span>Mujer</span>
+                  </button>
+                  <button type="button" id="btn-sex-male" onclick="setSex('male')" class="py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 font-medium text-xs flex items-center justify-center space-x-2 transition">
+                    <i data-lucide="user" class="w-3.5 h-3.5 text-blue-400"></i>
+                    <span>Hombre</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Clase de Pasaje -->
+              <div class="space-y-2">
+                <label class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                  <span>Clase Social (Pclass)</span>
+                  <span id="class-indicator-text" class="text-[11px] text-emerald-400 font-normal">1ª Clase (Alta)</span>
+                </label>
+                <div class="grid grid-cols-3 gap-2">
+                  <button type="button" id="btn-pclass-1" onclick="setPclass(1)" class="py-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-xs font-semibold transition">1ª Clase</button>
+                  <button type="button" id="btn-pclass-2" onclick="setPclass(2)" class="py-2 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 text-xs font-medium transition">2ª Clase</button>
+                  <button type="button" id="btn-pclass-3" onclick="setPclass(3)" class="py-2 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 text-xs font-medium transition">3ª Clase</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Edad Slider -->
+            <div class="space-y-2 pt-1">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-semibold text-slate-300 flex items-center space-x-1.5">
+                  <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                  <span>Edad del Pasajero</span>
+                </label>
+                <div class="flex items-center space-x-1">
+                  <span id="age-val-display" class="font-mono text-sm font-bold text-brand-400">29</span>
+                  <span class="text-xs text-slate-400">años</span>
+                </div>
+              </div>
+              <input type="range" id="input-age" min="1" max="80" value="29" oninput="onInputChanged()" class="w-full">
+              <div class="flex justify-between text-[10px] text-slate-400 font-mono">
+                <span>1 año (Infante)</span>
+                <span>29 años (Promedio)</span>
+                <span>80 años (Longevo)</span>
+              </div>
+            </div>
+
+            <!-- 3. Tarifa (Fare) Slider -->
+            <div class="space-y-2 pt-1">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-semibold text-slate-300 flex items-center space-x-1.5">
+                  <i data-lucide="dollar-sign" class="w-3.5 h-3.5 text-slate-400"></i>
+                  <span>Tarifa del Boleto (£)</span>
+                </label>
+                <div class="flex items-center space-x-2">
+                  <span id="fare-val-display" class="font-mono text-sm font-bold text-amber-400">£60.00</span>
+                  <button type="button" onclick="resetDefaultFare()" class="text-[10px] text-brand-400 hover:text-brand-300 underline">Tarifa típica</button>
+                </div>
+              </div>
+              <input type="range" id="input-fare" min="0" max="512" step="1" value="60" oninput="onInputChanged()" class="w-full">
+              <div class="flex justify-between text-[10px] text-slate-400 font-mono">
+                <span>£0.00 (Gratis)</span>
+                <span>£32.20 (Media)</span>
+                <span>£512.33 (Récord)</span>
+              </div>
+            </div>
+
+            <!-- 4. Puerto de Embarque & Título Social -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <!-- Puerto -->
+              <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-300 flex items-center space-x-1">
+                  <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
+                  <span>Puerto de Embarque</span>
+                </label>
+                <select id="input-embarked" onchange="onInputChanged()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand-500">
+                  <option value="S">Southampton (S) - Inglaterra (72.5%)</option>
+                  <option value="C">Cherburgo (C) - Francia (18.9%)</option>
+                  <option value="Q">Queenstown (Q) - Irlanda (8.6%)</option>
+                </select>
+              </div>
+
+              <!-- Título Social -->
+              <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-300 flex items-center space-x-1">
+                  <i data-lucide="tag" class="w-3.5 h-3.5 text-slate-400"></i>
+                  <span>Tratamiento / Título Social</span>
+                </label>
+                <select id="input-title" onchange="onInputChanged()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand-500">
+                  <option value="auto">Deducción Automática (Recomendado)</option>
+                  <option value="Miss">Miss (Mujer soltera / joven)</option>
+                  <option value="Mrs">Mrs (Mujer casada)</option>
+                  <option value="Mr">Mr (Hombre adulto)</option>
+                  <option value="Master">Master (Niño varón &lt; 14)</option>
+                  <option value="Otro">Otro (Dr, Rev, Nobleza, etc.)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 5. Grupo Familiar (SibSp y Parch) -->
+            <div class="space-y-3 pt-1 border-t border-slate-800/80">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-semibold text-slate-300 flex items-center space-x-1.5">
+                  <i data-lucide="users" class="w-3.5 h-3.5 text-slate-400"></i>
+                  <span>Grupo Familiar a Bordo</span>
+                </label>
+                <span id="family-total-badge" class="px-2.5 py-0.5 text-[11px] font-mono font-medium rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                  Viaja Solo (0 fam.)
+                </span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="bklit-card-subtle p-3 rounded-xl space-y-1">
+                  <div class="flex justify-between text-xs">
+                    <span class="text-slate-400">Hermanos / Cónyuges (SibSp):</span>
+                    <span id="sibsp-val" class="font-mono font-bold text-white">0</span>
+                  </div>
+                  <input type="range" id="input-sibsp" min="0" max="8" value="0" oninput="onInputChanged()" class="w-full">
+                </div>
+
+                <div class="bklit-card-subtle p-3 rounded-xl space-y-1">
+                  <div class="flex justify-between text-xs">
+                    <span class="text-slate-400">Padres / Hijos (Parch):</span>
+                    <span id="parch-val" class="font-mono font-bold text-white">0</span>
+                  </div>
+                  <input type="range" id="input-parch" min="0" max="6" value="0" oninput="onInputChanged()" class="w-full">
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="pt-2">
+              <button type="button" onclick="runPrediction()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-lg shadow-brand-500/20 flex items-center justify-center space-x-2 transition transform active:scale-[0.99]">
+                <i data-lucide="zap" class="w-4 h-4 text-amber-300"></i>
+                <span>Calcular Predicción en Producción</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Right Column: Prediction Output Card (Bklit UI Style) -->
+        <div class="lg:col-span-5 space-y-5">
+          
+          <!-- Primary Prediction Card -->
+          <div id="prediction-card" class="bklit-card rounded-2xl p-6 relative overflow-hidden transition-all duration-300 border-emerald-500/30 glow-emerald">
+            
+            <!-- Card Header -->
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+              <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Resultado del Modelo</span>
+              </div>
+              <span id="active-model-badge" class="px-2.5 py-0.5 text-[11px] font-semibold bg-brand-500/10 text-brand-300 border border-brand-500/20 rounded-full">
+                Random Forest
+              </span>
+            </div>
+
+            <!-- Big Status Headline -->
+            <div class="text-center py-6">
+              <div id="status-pill" class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 pulse-badge mb-3">
+                <i id="status-icon" data-lucide="check-circle-2" class="w-4 h-4"></i>
+                <span id="status-text">SOBREVIVE</span>
+              </div>
+
+              <!-- Main Percentage Counter -->
+              <div class="flex items-baseline justify-center space-x-1">
+                <span id="survival-percentage" class="font-mono text-5xl sm:text-6xl font-black tracking-tight text-white">94.0</span>
+                <span class="font-mono text-2xl font-bold text-emerald-400">%</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">Probabilidad calculada de supervivencia</p>
+            </div>
+
+            <!-- Probability Bar -->
+            <div class="space-y-2">
+              <div class="flex justify-between text-xs font-mono">
+                <span class="text-rose-400 flex items-center"><i data-lucide="x" class="w-3 h-3 mr-1"></i> Fallecer: <span id="prob-die-text" class="ml-1 font-bold">6.0%</span></span>
+                <span class="text-emerald-400 flex items-center">Salvarse: <span id="prob-survive-text" class="ml-1 font-bold">94.0%</span> <i data-lucide="check" class="w-3 h-3 ml-1"></i></span>
+              </div>
+              <div class="w-full h-3 rounded-full bg-slate-800/80 overflow-hidden flex p-0.5 border border-slate-700/50">
+                <div id="bar-survive" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500" style="width: 94%;"></div>
+              </div>
+            </div>
+
+            <!-- Comparison Block (Shown when 'both' is selected) -->
+            <div id="comparison-block" class="hidden mt-6 pt-4 border-t border-slate-800 space-y-3">
+              <h4 class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                <span>Comparativa entre Modelos</span>
+                <i data-lucide="git-compare" class="w-3.5 h-3.5 text-brand-400"></i>
+              </h4>
+              <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="bklit-card-subtle p-3 rounded-xl">
+                  <span class="text-slate-400 block text-[11px]">Random Forest</span>
+                  <div class="text-emerald-400 font-bold font-mono text-base mt-1" id="cmp-rf-val">94.0%</div>
+                  <span class="text-[10px] text-slate-400">Árboles ensamble</span>
+                </div>
+                <div class="bklit-card-subtle p-3 rounded-xl">
+                  <span class="text-slate-400 block text-[11px]">Regresión Logística</span>
+                  <div class="text-emerald-400 font-bold font-mono text-base mt-1" id="cmp-lr-val">90.9%</div>
+                  <span class="text-[10px] text-slate-400">Lineal sigmoide</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Factors & Explainability Section -->
+            <div class="mt-6 pt-4 border-t border-slate-800 space-y-3">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-semibold text-slate-300 flex items-center space-x-1.5">
+                  <i data-lucide="brain-circuit" class="w-3.5 h-3.5 text-brand-400"></i>
+                  <span>Factores Determinantes</span>
+                </h4>
+                <span id="confidence-badge" class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Confianza Alta</span>
+              </div>
+
+              <div id="factors-container" class="space-y-2">
+                <!-- Dynamically generated pills -->
+                <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-slate-300 flex items-start space-x-2">
+                  <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0"></i>
+                  <div>
+                    <span class="font-semibold text-white block">Género Femenino</span>
+                    <span class="text-[11px] text-slate-400">La política de 'mujeres y niños primero' confiere la mayor ventaja.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Production Info Card -->
+          <div class="bklit-card rounded-2xl p-4 text-xs text-slate-400 space-y-2">
+            <div class="flex items-center space-x-2 text-slate-300 font-medium">
+              <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+              <span>Pipeline en Producción Activo</span>
+            </div>
+            <p class="leading-relaxed">
+              El pipeline preprocesa automáticamente las variables numéricas con <code class="text-brand-300">StandardScaler</code>, 
+              aplica transformación <code class="text-brand-300">log1p</code> sobre la tarifa y codifica las variables categóricas 
+              con <code class="text-brand-300">OneHotEncoder</code> sin riesgo de fuga de datos (data leakage).
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- TAB 2: DASHBOARD DE INSIGHTS (ESTILO BKLIT UI) -->
+    <!-- ============================================================== -->
+    <section id="tab-dash" class="hidden space-y-6">
+
+      <!-- Top KPI Row -->
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4" id="kpi-container">
+        <!-- KPI 1 -->
+        <div class="bklit-card rounded-2xl p-4 space-y-1">
+          <div class="flex justify-between items-center text-slate-400 text-xs">
+            <span>Total Pasajeros</span>
+            <i data-lucide="users" class="w-4 h-4 text-blue-400"></i>
+          </div>
+          <div class="font-mono text-2xl lg:text-3xl font-bold text-white" id="kpi-passengers">891</div>
+          <span class="text-[10px] text-slate-400 block">Registros evaluados</span>
+        </div>
+        <!-- KPI 2 -->
+        <div class="bklit-card rounded-2xl p-4 space-y-1">
+          <div class="flex justify-between items-center text-slate-400 text-xs">
+            <span>Sobrevivientes</span>
+            <i data-lucide="life-buoy" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <div class="font-mono text-2xl lg:text-3xl font-bold text-emerald-400" id="kpi-survivors">342</div>
+          <span class="text-[10px] text-emerald-400/80 block">38.4% del total a bordo</span>
+        </div>
+        <!-- KPI 3 -->
+        <div class="bklit-card rounded-2xl p-4 space-y-1">
+          <div class="flex justify-between items-center text-slate-400 text-xs">
+            <span>Víctimas Fatales</span>
+            <i data-lucide="skull" class="w-4 h-4 text-rose-400"></i>
+          </div>
+          <div class="font-mono text-2xl lg:text-3xl font-bold text-rose-400" id="kpi-deaths">549</div>
+          <span class="text-[10px] text-rose-400/80 block">61.6% tasa de mortalidad</span>
+        </div>
+        <!-- KPI 4 -->
+        <div class="bklit-card rounded-2xl p-4 space-y-1">
+          <div class="flex justify-between items-center text-slate-400 text-xs">
+            <span>Boleto Récord</span>
+            <i data-lucide="gem" class="w-4 h-4 text-amber-400"></i>
+          </div>
+          <div class="font-mono text-2xl lg:text-3xl font-bold text-amber-400" id="kpi-fare">£512.33</div>
+          <span class="text-[10px] text-amber-400/80 block">Suite Cherburgo (100% salvados)</span>
+        </div>
+        <!-- KPI 5 -->
+        <div class="bklit-card rounded-2xl p-4 space-y-1 col-span-2 lg:col-span-1">
+          <div class="flex justify-between items-center text-slate-400 text-xs">
+            <span>Puerto Principal</span>
+            <i data-lucide="anchor" class="w-4 h-4 text-indigo-400"></i>
+          </div>
+          <div class="font-mono text-xl lg:text-2xl font-bold text-indigo-300" id="kpi-port">Southampton</div>
+          <span class="text-[10px] text-slate-400 block">646 pasajeros (72.5%)</span>
+        </div>
+      </div>
+
+      <!-- Charts Row 1: Sex & Class -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Survival by Gender -->
+        <div class="bklit-card rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="venus-mars" class="w-4 h-4 text-pink-400"></i>
+              <h3 class="text-sm font-bold text-white">Supervivencia por Género</h3>
+            </div>
+            <span class="text-[11px] text-slate-400">Tasa de salvamento</span>
+          </div>
+
+          <div class="space-y-4 pt-2">
+            <!-- Female -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="font-medium text-pink-300 flex items-center"><i data-lucide="user" class="w-3.5 h-3.5 mr-1 text-pink-400"></i> Mujeres (314 pas.)</span>
+                <span class="font-mono font-bold text-pink-300">74.2% (233 salvadas)</span>
+              </div>
+              <div class="w-full h-3 rounded-full bg-slate-800 overflow-hidden flex">
+                <div class="h-full bg-gradient-to-r from-pink-500 to-rose-400 rounded-full" style="width: 74.2%;"></div>
+              </div>
+            </div>
+
+            <!-- Male -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="font-medium text-blue-300 flex items-center"><i data-lucide="user" class="w-3.5 h-3.5 mr-1 text-blue-400"></i> Hombres (577 pas.)</span>
+                <span class="font-mono font-bold text-blue-300">18.9% (109 salvados)</span>
+              </div>
+              <div class="w-full h-3 rounded-full bg-slate-800 overflow-hidden flex">
+                <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-400 rounded-full" style="width: 18.9%;"></div>
+              </div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 pt-2 border-t border-slate-800/60">
+            💡 Una mujer tenía <strong class="text-white">3.9 veces más probabilidades</strong> de salvarse que un hombre.
+          </p>
+        </div>
+
+        <!-- Survival by Passenger Class -->
+        <div class="bklit-card rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i>
+              <h3 class="text-sm font-bold text-white">Supervivencia por Clase Social</h3>
+            </div>
+            <span class="text-[11px] text-slate-400">Gradiente económico</span>
+          </div>
+
+          <div class="space-y-3.5 pt-2">
+            <!-- 1st Class -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="text-emerald-300 font-medium">1ª Clase (Alta)</span>
+                <span class="font-mono font-bold text-emerald-300">63.0% (136/216)</span>
+              </div>
+              <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+                <div class="h-full bg-emerald-500 rounded-full" style="width: 63%;"></div>
+              </div>
+            </div>
+
+            <!-- 2nd Class -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="text-cyan-300 font-medium">2ª Clase (Media)</span>
+                <span class="font-mono font-bold text-cyan-300">47.3% (87/184)</span>
+              </div>
+              <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+                <div class="h-full bg-cyan-500 rounded-full" style="width: 47.3%;"></div>
+              </div>
+            </div>
+
+            <!-- 3rd Class -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="text-amber-300 font-medium">3ª Clase (Baja)</span>
+                <span class="font-mono font-bold text-amber-300">24.2% (119/491)</span>
+              </div>
+              <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+                <div class="h-full bg-amber-500 rounded-full" style="width: 24.2%;"></div>
+              </div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 pt-2 border-t border-slate-800/60">
+            💡 En 3ª clase falleció el <strong class="text-white">75.8%</strong> de los pasajeros.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Charts Row 2: Ports & Family Size -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Port of Embarkation -->
+        <div class="bklit-card rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="map-pin" class="w-4 h-4 text-indigo-400"></i>
+              <h3 class="text-sm font-bold text-white">Distribución por Puerto de Embarque</h3>
+            </div>
+            <span class="text-[11px] text-slate-400">Afluencia</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 pt-2 text-center">
+            <div class="bklit-card-subtle p-3 rounded-xl">
+              <span class="text-[11px] text-slate-400 block">Southampton (S)</span>
+              <span class="font-mono text-xl font-bold text-white block mt-1">646</span>
+              <span class="text-[10px] text-indigo-400 font-medium">72.5% • 33.7% surv.</span>
+            </div>
+            <div class="bklit-card-subtle p-3 rounded-xl">
+              <span class="text-[11px] text-slate-400 block">Cherburgo (C)</span>
+              <span class="font-mono text-xl font-bold text-white block mt-1">168</span>
+              <span class="text-[10px] text-emerald-400 font-medium">18.9% • 55.4% surv.</span>
+            </div>
+            <div class="bklit-card-subtle p-3 rounded-xl">
+              <span class="text-[11px] text-slate-400 block">Queenstown (Q)</span>
+              <span class="font-mono text-xl font-bold text-white block mt-1">77</span>
+              <span class="text-[10px] text-amber-400 font-medium">8.6% • 39.0% surv.</span>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 pt-1">
+            📍 <strong class="text-white">Cherburgo</strong> tuvo la tasa de supervivencia más alta gracias a que la mitad de sus pasajeros eran de 1ª clase.
+          </p>
+        </div>
+
+        <!-- Family Size Impact -->
+        <div class="bklit-card rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="users" class="w-4 h-4 text-cyan-400"></i>
+              <h3 class="text-sm font-bold text-white">Impacto del Tamaño Familiar</h3>
+            </div>
+            <span class="text-[11px] text-slate-400">Efecto Red</span>
+          </div>
+
+          <div class="space-y-3 pt-1">
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-300">Familia Pequeña (1 a 3 miembros)</span>
+              <span class="font-mono font-bold text-emerald-400">57.9% de supervivencia</span>
+            </div>
+            <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+              <div class="h-full bg-emerald-400 rounded-full" style="width: 57.9%;"></div>
+            </div>
+
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-300">Viajero Solitario (0 familiares)</span>
+              <span class="font-mono font-bold text-slate-300">30.4% de supervivencia</span>
+            </div>
+            <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+              <div class="h-full bg-slate-400 rounded-full" style="width: 30.4%;"></div>
+            </div>
+
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-300">Familia Numerosa (4+ miembros)</span>
+              <span class="font-mono font-bold text-rose-400">16.1% de supervivencia</span>
+            </div>
+            <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+              <div class="h-full bg-rose-500 rounded-full" style="width: 16.1%;"></div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 pt-1">
+            ⚠️ Las familias numerosas sufrieron enormes trabas para reunirse antes de acceder a los botes.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Tables Row: Oldest Died & Top Tickets -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Table 1: Personas de mayor edad que murieron -->
+        <div class="bklit-card rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="user-x" class="w-4 h-4 text-rose-400"></i>
+              <h3 class="text-sm font-bold text-white">Pasajeros de Mayor Edad que Murieron</h3>
+            </div>
+            <span class="px-2 py-0.5 text-[10px] rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold">Consulta Clave</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 font-mono text-[11px]">
+                  <th class="py-2">Nombre</th>
+                  <th class="py-2">Edad</th>
+                  <th class="py-2">Clase</th>
+                  <th class="py-2">Boleto</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60" id="oldest-died-table">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Table 2: Boletos más caros -->
+        <div class="bklit-card rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="ticket" class="w-4 h-4 text-amber-400"></i>
+              <h3 class="text-sm font-bold text-white">Boletos Récord Más Caros</h3>
+            </div>
+            <span class="px-2 py-0.5 text-[10px] rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-semibold">Tarifas Top</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 font-mono text-[11px]">
+                  <th class="py-2">Pasajero</th>
+                  <th class="py-2">Tarifa</th>
+                  <th class="py-2">Clase</th>
+                  <th class="py-2">Resultado</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60" id="top-fares-table">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Core Insights Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="insights-grid">
+        <!-- Rendered via JS -->
+      </div>
+
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- TAB 3: ASISTENTE DE CONSULTAS (CHAT INTELIGENTE) -->
+    <!-- ============================================================== -->
+    <section id="tab-chat" class="hidden">
+      <div class="bklit-card rounded-2xl h-[720px] flex flex-col overflow-hidden">
+        
+        <!-- Chat Header -->
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-brand-500/15 border border-brand-500/30 flex items-center justify-center text-brand-400">
+              <i data-lucide="bot" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-white">Asistente de Consultas del Titanic</h2>
+              <p class="text-xs text-slate-400">Haz preguntas en lenguaje natural sobre pasajeros, estadísticas y récords</p>
+            </div>
+          </div>
+          <button onclick="clearChat()" class="text-xs text-slate-400 hover:text-white px-2 py-1 rounded hover:bg-slate-800 transition">
+            Limpiar
+          </button>
+        </div>
+
+        <!-- Quick Question Chips -->
+        <div class="p-3 border-b border-slate-800/60 bg-slate-950/40 flex items-center space-x-2 overflow-x-auto text-xs">
+          <span class="text-slate-400 whitespace-nowrap flex items-center text-[11px]"><i data-lucide="sparkle" class="w-3 h-3 mr-1 text-amber-400"></i> Sugerencias:</span>
+          <button onclick="sendQuickQuery('¿Cuál fue el lugar de mayor embarcación?')" class="px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 whitespace-nowrap transition">
+            🚢 Mayor embarcación
+          </button>
+          <button onclick="sendQuickQuery('¿Cuál fue el ticket más alto?')" class="px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 whitespace-nowrap transition">
+            💰 Ticket más alto
+          </button>
+          <button onclick="sendQuickQuery('¿Cuántos sobrevivientes hubo en total?')" class="px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 whitespace-nowrap transition">
+            🛟 Cuántos sobrevivieron
+          </button>
+          <button onclick="sendQuickQuery('¿Cuáles fueron las personas de mayor edad que murieron?')" class="px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 whitespace-nowrap transition">
+            👴 Mayor edad que murieron
+          </button>
+          <button onclick="sendQuickQuery('¿Supervivencia de mujeres vs hombres?')" class="px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 whitespace-nowrap transition">
+            👩 vs 👨 Por género
+          </button>
+        </div>
+
+        <!-- Chat Message Container -->
+        <div id="chat-messages" class="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4">
+          <!-- Initial welcome bot message -->
+          <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <i data-lucide="bot" class="w-4 h-4"></i>
+            </div>
+            <div class="bklit-card-subtle p-4 rounded-2xl max-w-2xl text-xs sm:text-sm text-slate-200 space-y-2">
+              <p>
+                ¡Hola! Soy tu asistente analítico sobre los datos del Titanic. Puedes consultarme libremente en español sobre cualquier estadística del naufragio.
+              </p>
+              <div class="grid grid-cols-2 gap-2 pt-1">
+                <div class="p-2 rounded-lg bg-slate-900/80 border border-slate-800 text-xs">
+                  <span class="text-brand-400 font-semibold block">📍 Consultas de Puertos</span>
+                  <span class="text-slate-400 text-[11px]">Southampton, Cherburgo y Queenstown</span>
+                </div>
+                <div class="p-2 rounded-lg bg-slate-900/80 border border-slate-800 text-xs">
+                  <span class="text-emerald-400 font-semibold block">🎟️ Boletos y Récords</span>
+                  <span class="text-slate-400 text-[11px]">Tarifas más altas y pasajeros VIP</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input Form -->
+        <form id="chat-form" onsubmit="handleChatSubmit(event)" class="p-3 sm:p-4 border-t border-slate-800 bg-slate-900/70 flex items-center space-x-2">
+          <input type="text" id="chat-input" placeholder="Escribe tu consulta (ej. '¿Cuál fue el ticket más alto?')..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-500 outline-none focus:border-brand-500 transition">
+          <button type="submit" id="chat-send-btn" class="px-5 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs sm:text-sm shadow-md shadow-brand-500/20 flex items-center space-x-1.5 transition">
+            <span>Enviar</span>
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </form>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800/80 py-4 mt-8 bg-[#0b0f19] text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center space-x-2">
+        <span>Titanic Machine Learning Production Suite</span>
+        <span>•</span>
+        <span class="text-emerald-400 font-mono">Flask REST API Ready</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span>Random Forest &amp; Logistic Regression</span>
+        <span>Tailwind CSS</span>
+        <span>Anime.js</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- App Logic -->
+  <script src="/static/js/app.js"></script>
+  <script>
+    // Initialize Lucide icons on load
+    lucide.createIcons();
+  </script>
+</body>
+</html>
