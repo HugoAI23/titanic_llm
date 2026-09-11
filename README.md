@@ -41,6 +41,12 @@ Plataforma interactiva para la exploración, inferencia y análisis de los datos
    - Presets arquetípicos listos para probar (Rose DeWitt, Jack Dawson, Niño de 2ª clase, Caballero de 1ª clase, Familia numerosa).
    - Animaciones continuas de porcentajes y barras de probabilidad con **Anime.js**.
 
+5. **Curvas de Aprendizaje y Dinámica de Gradientes (`curvas_aprendizaje_gradiente.ipynb`)**:
+   - Diagnóstico riguroso de sesgo vs. varianza mediante curvas de aprendizaje (`learning_curve`) con validación cruzada.
+   - Cálculo del **gradiente marginal de datos** ($\frac{\Delta \text{Accuracy}}{\Delta N}$) para evaluar rendimientos decrecientes y saturación muestral.
+   - Cálculo del **gradiente de optimización** ($\|\nabla_\mathbf{w} \mathcal{L}\|_2 \to 0$ y $\frac{d\mathcal{L}}{dt}$) época a época para Regresión Logística y SGD.
+   - Monitoreo del gradiente marginal de reducción de varianza por árbol en Random Forest ($\frac{\Delta \text{Error}_{OOB}}{\Delta \text{Árboles}}$) y descenso sobre pseudo-residuos en Gradient Boosting.
+
 ---
 
 ## 🚀 Cómo Ejecutar la Aplicación
